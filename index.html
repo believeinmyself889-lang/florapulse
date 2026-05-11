@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FloraPulse is an image-conditioned multisensory botanical particle system for art-therapy interaction research.">
+    <title>FloraPulse - Multisensory Botanical Interaction</title>
+    <link rel="stylesheet" href="./src/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+<body>
+    <main id="app-shell">
+        <section id="overlay" class="overlay" aria-label="启动 FloraPulse">
+            <div class="intro">
+                <p class="eyebrow">FloraPulse</p>
+                <h1>ETHEREAL <strong>FLORA</strong></h1>
+                <button id="start-btn" class="glass-btn primary" type="button">感应生命形态</button>
+                <p id="loading-msg" class="loading-text" hidden>正在调律自然声景...</p>
+            </div>
+        </section>
+
+        <nav class="top-nav" aria-label="FloraPulse 控制栏">
+            <div class="brand-group">
+                <a class="brand" href="./index.html" aria-label="FloraPulse home">
+                    <span>FP</span>
+                    <small>BIO</small>
+                </a>
+                <label class="glass-btn upload-btn">
+                    <span>上传形态种子</span>
+                    <input type="file" id="image-upload" accept="image/*">
+                </label>
+            </div>
+
+            <div class="control-group">
+                <label class="slider-field">
+                    <span>粒子密度</span>
+                    <input type="range" id="size-slider" min="0.5" max="5" step="0.1" value="2.2">
+                </label>
+                <button id="mute-btn" class="glass-btn" type="button">静音</button>
+                <button id="reset-btn" class="glass-btn" type="button">重置</button>
+            </div>
+        </nav>
+
+        <video id="video-preview" autoplay playsinline muted></video>
+        <div id="status-line" class="status-line">loading default rice form</div>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+</body>
+</html>

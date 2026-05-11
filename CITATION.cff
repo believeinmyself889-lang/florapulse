@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use FloraPulse in research or teaching, please cite the software artifact."
+title: "FloraPulse: An Image-Conditioned Multisensory Botanical Particle System for Art-Therapy Interaction"
+authors:
+  - name: "Zhenghao"
+year: 2026
+repository-code: "https://github.com/believeinmyself889-lang/florapulse"
+license: "MIT"
+type: software

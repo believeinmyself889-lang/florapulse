@@ -1,0 +1,13 @@
+docs/chrome-profile-check
+*.docx
+.git
+paper
+benchmarks/results/*.json
+docs/EI_*.md
+docs/PROJECT_ASSESSMENT_*.md
+docs/references.bib
+*.pdf
+*.aux
+*.bbl
+*.blg
+*.synctex.gz
