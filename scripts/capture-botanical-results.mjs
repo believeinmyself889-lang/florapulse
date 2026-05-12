@@ -22,9 +22,14 @@ const cases = args
     .map((arg) => arg.slice('--case='.length))
     .map((value) => {
         const splitAt = value.indexOf('=');
-        if (splitAt < 0) return { name: value, path: null };
+        const rawName = splitAt < 0 ? value : value.slice(0, splitAt);
+        const variantAt = rawName.indexOf('@');
+        const name = variantAt < 0 ? rawName : rawName.slice(0, variantAt);
+        const variant = variantAt < 0 ? 'default' : rawName.slice(variantAt + 1);
+        if (splitAt < 0) return { name, variant, path: null };
         return {
-            name: value.slice(0, splitAt),
+            name,
+            variant,
             path: value.slice(splitAt + 1)
         };
     });
@@ -183,6 +188,35 @@ async function uploadImage(cdp, imagePath) {
     await wait(1400);
 }
 
+async function applyVariant(cdp, variant, viewportText) {
+    if (variant === 'reset') {
+        await cdp.send('Runtime.evaluate', {
+            expression: "document.querySelector('#reset-btn')?.click()",
+            returnByValue: true
+        });
+        await wait(3200);
+        return;
+    }
+
+    if (variant === 'disturb') {
+        const [width, height] = viewportText.split(',').map((value) => Number.parseInt(value, 10));
+        const points = [
+            [Math.round(width * 0.62), Math.round(height * 0.44)],
+            [Math.round(width * 0.68), Math.round(height * 0.38)],
+            [Math.round(width * 0.58), Math.round(height * 0.50)]
+        ];
+        for (const [x, y] of points) {
+            await cdp.send('Input.dispatchMouseEvent', {
+                type: 'mouseMoved',
+                x,
+                y,
+                buttons: 0
+            });
+            await wait(80);
+        }
+    }
+}
+
 async function captureCase(caseInfo, port, chromePath) {
     const profileDir = join(tmpdir(), `florapulse-capture-${caseInfo.name}-${Date.now()}`);
     const url = `http://127.0.0.1:${port}/index.html?demo=1&benchmark=1`;
@@ -209,8 +243,10 @@ async function captureCase(caseInfo, port, chromePath) {
         await cdp.send('Runtime.enable');
         await waitForReady(cdp);
         if (caseInfo.path) await uploadImage(cdp, caseInfo.path);
+        await applyVariant(cdp, caseInfo.variant, viewport);
         await hideUi(cdp);
-        await wait(500);
+        if (caseInfo.variant === 'disturb') await applyVariant(cdp, caseInfo.variant, viewport);
+        await wait(caseInfo.variant === 'disturb' ? 120 : 500);
 
         const screenshot = await cdp.send('Page.captureScreenshot', {
             format: 'png',
