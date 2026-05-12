@@ -7,6 +7,9 @@ const MediaPipeCamera = window.Camera;
 const particleCount = 30000;
 const defaultImage = './rice.png';
 const idleMorphFactor = 0.58;
+const morphInputAlpha = 0.28;
+const disturbPointAlpha = 0.36;
+const disturbStrengthAlpha = 0.32;
 const freqGrowth = [110, 130.81, 146.83, 164.81, 196, 220];
 const freqScatter = [440, 523, 659, 783, 880, 1046];
 const urlParams = new URLSearchParams(window.location.search);
@@ -39,6 +42,13 @@ let lastHandSeen = 0;
 
 const disturbPoint = new THREE.Vector3(999, 999, 999);
 const pointerPoint = new THREE.Vector3(999, 999, 999);
+const rawGesturePoint = new THREE.Vector3(999, 999, 999);
+const gestureFilter = {
+    initialized: false,
+    morph: idleMorphFactor,
+    disturbStrength: 0,
+    disturbPoint: new THREE.Vector3(999, 999, 999)
+};
 
 const ui = {
     overlay: document.getElementById('overlay'),
@@ -66,6 +76,45 @@ function screenToWorld(clientX, clientY) {
     const x = (clientX / window.innerWidth - 0.5) * 25;
     const y = (0.5 - clientY / window.innerHeight) * 20 + 2;
     return new THREE.Vector3(x, y, 2);
+}
+
+function lerpScalar(current, target, alpha) {
+    return current + (target - current) * alpha;
+}
+
+function resetGestureFilter() {
+    gestureFilter.initialized = false;
+    gestureFilter.morph = idleMorphFactor;
+    gestureFilter.disturbStrength = 0;
+    gestureFilter.disturbPoint.set(999, 999, 999);
+}
+
+function applyGestureFilter(rawMorph, rawDisturbPoint, rawDisturbStrength) {
+    if (!gestureFilter.initialized) {
+        gestureFilter.initialized = true;
+        gestureFilter.morph = rawMorph;
+        gestureFilter.disturbStrength = rawDisturbStrength;
+        gestureFilter.disturbPoint.copy(rawDisturbPoint);
+    } else {
+        gestureFilter.morph = lerpScalar(gestureFilter.morph, rawMorph, morphInputAlpha);
+        gestureFilter.disturbStrength = lerpScalar(
+            gestureFilter.disturbStrength,
+            rawDisturbStrength,
+            disturbStrengthAlpha
+        );
+
+        if (rawDisturbStrength > 0) {
+            gestureFilter.disturbPoint.lerp(rawDisturbPoint, disturbPointAlpha);
+        }
+    }
+
+    targetMorphFactor = gestureFilter.morph;
+    disturbStrength = gestureFilter.disturbStrength;
+    if (disturbStrength > 0.02) {
+        disturbPoint.copy(gestureFilter.disturbPoint);
+    } else {
+        disturbPoint.set(999, 999, 999);
+    }
 }
 
 function renderOnce() {
@@ -263,25 +312,29 @@ function playSynth(freqs, height, type = 'sine', vol = 0.1) {
 }
 
 function onHandResults(results) {
-    disturbStrength = 0;
-    disturbPoint.set(999, 999, 999);
-    targetMorphFactor = idleMorphFactor;
-
     if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+        resetGestureFilter();
+        disturbStrength = 0;
+        disturbPoint.set(999, 999, 999);
+        targetMorphFactor = idleMorphFactor;
         updateStatus('idle growth · move hand or pointer');
         return;
     }
 
     lastHandSeen = performance.now();
     updateStatus('hand detected · gesture mode');
+    let rawMorphTarget = idleMorphFactor;
+    let rawDisturbStrength = 0;
+    rawGesturePoint.set(999, 999, 999);
+
     results.multiHandLandmarks.forEach((hand, idx) => {
         const label = results.multiHandedness[idx].label;
         const singleHand = results.multiHandLandmarks.length === 1;
 
         if (label === 'Left' || singleHand) {
             const distance = Math.hypot(hand[4].x - hand[8].x, hand[4].y - hand[8].y);
-            targetMorphFactor = Math.min(1.0, distance * 3.5);
-            if (targetMorphFactor > 0.6 && Math.random() > 0.97) {
+            rawMorphTarget = Math.min(1.0, distance * 3.5);
+            if (rawMorphTarget > 0.6 && Math.random() > 0.97) {
                 playSynth(freqGrowth, hand[8].y, 'triangle', 0.08);
             }
         }
@@ -289,13 +342,15 @@ function onHandResults(results) {
         if (!singleHand && label === 'Right') {
             const x = (0.5 - hand[8].x) * 25;
             const y = (0.5 - hand[8].y) * 20 + 2;
-            disturbPoint.set(x, y, 2);
-            disturbStrength = 1.0;
+            rawGesturePoint.set(x, y, 2);
+            rawDisturbStrength = 1.0;
             if (Math.random() > 0.94) {
                 playSynth(freqScatter, hand[8].y, 'sine', 0.05);
             }
         }
     });
+
+    applyGestureFilter(rawMorphTarget, rawGesturePoint, rawDisturbStrength);
 }
 
 async function startCameraMode() {
@@ -439,6 +494,7 @@ function resetToSphere() {
     }
     geometry.attributes.targetPosition.array.set(targetPositions);
     geometry.attributes.targetPosition.needsUpdate = true;
+    resetGestureFilter();
     targetMorphFactor = idleMorphFactor;
     updateStatus('sphere field restored');
 }

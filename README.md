@@ -13,6 +13,7 @@ The default case uses `rice.png`, a rice image prepared for a cultural botanical
 - Image-conditioned particle growth from the built-in `rice.png` case or a user-uploaded image.
 - Real-time WebGL particle rendering with shader-based growth, sway, glow, depth variation, and disturbance effects.
 - MediaPipe Hands interaction for growth control and two-hand disturbance.
+- Low-pass gesture smoothing for steadier pinch growth and disturbance control.
 - Pointer and touch fallback for demos, accessibility testing, and no-camera environments.
 - Web Audio API soundscape with growth tones, scattering tones, delay, and filtered wind noise.
 - Minimal interface designed for focused interaction instead of dashboard-style operation.
@@ -122,6 +123,12 @@ node scripts/run-benchmark.mjs
 ```
 
 The latest local result is written to `benchmarks/results/latest.json`, which is ignored by Git because values are machine-specific. See `docs/BENCHMARK.md` for the measurement protocol.
+
+Optional artifact screenshots can be regenerated with:
+
+```bash
+node scripts/capture-botanical-results.mjs --out docs --case=rice
+```
 
 ## Privacy and Research Boundary
 
