@@ -132,8 +132,6 @@ node scripts/capture-botanical-results.mjs --out docs --case=rice
 
 ## Privacy and Research Boundary
 
-This public repository contains only the source code, default public asset, screenshots, deployment files, benchmark script, and evidence-safe evaluation protocol. The manuscript source, manuscript PDF, unpublished submission notes, local benchmark JSON, and private project documents are intentionally excluded.
-
 FloraPulse should be described as an art-therapy interaction research prototype, not as a medical device or treatment. Camera frames are used for browser-side hand tracking during interaction; this repository does not include a backend service for uploading or storing camera data.
 
 See `docs/OPEN_SOURCE_PRIVACY_REVIEW.md` for the release-scope audit.
