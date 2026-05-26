@@ -114,8 +114,6 @@ Recommended demo URL after deployment:
 
 ## Benchmark
 
-No user-study results or therapeutic outcome claims are included in this repository. The benchmark runner measures local engineering behavior only.
-
 Run:
 
 ```bash
